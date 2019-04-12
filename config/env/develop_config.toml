@@ -1,0 +1,56 @@
+title = "sys_config"
+
+# API
+[api.durian]
+ip = "10.251.37.101"
+host = "bb.dev.d2"
+port = "80"
+
+[redis.master]
+ip = "127.0.0.1"
+host = "localhost"
+port = "6379"
+
+[redis.slave]
+ip = "127.0.0.1"
+host = "localhost"
+port = "6379"
+
+[web]
+port = "9453"
+
+# DB
+[db]
+user = "promise_dev"
+pass = "S7xepPk9yVXH"
+connMaxLifetime = 60
+
+[db.SLOT_TOOL.M]
+ip = "10.251.38.202"
+host = ""
+port = "3306"
+dbName = "SLOT_TOOL"
+
+[db.SLOT_GAME.M]
+ip = "10.251.38.202"
+host = ""
+port = "3306"
+dbName = "SLOT_GAME"
+
+# MongoDB
+[mdb]
+ip = "10.251.38.155"
+port = "5672"
+
+# Url
+[url]
+ws = "/starfruit/api"
+source = "anubis-dev.vir888.net"
+localSource = "anubis-dev.vir888.net"
+localPic = "/starfruit"
+InURL = "http://d-api.inslotx.com/elibomApi/WebService/"
+
+# Host白名單
+[allow.host]
+host1 = "www-dev.vir888.net"
+host2 = "www-dev.vir888.net"

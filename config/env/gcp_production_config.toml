@@ -1,0 +1,108 @@
+title = "sys_config"
+
+# # API
+# [api.durian]
+# ip = ""
+# host = ""
+# port = ""
+
+[api.drd]
+ip = "drd-slot-receipt-system"
+host = "drd-slot-receipt-system"
+port = "80"
+auth = "FcB75fjfkBKIqOrol8iBBy4lScMR7u4dY1bkt1OpXZst4u15At"
+
+[api.anubis]
+address = "anubis"
+secure = false
+[[api.anubis.header]]
+key = "api-key"
+value = "qwe123"
+
+[api.jackpot]
+ip = "jackpot"
+host = "jp.in-games.com"
+port = "80"
+auth = "jackpot_auth"
+
+[[server]]
+name = "pepper"
+port = "8501"
+address = "pepper-sidecar"
+api_key = ""
+secure = false
+
+# Redis
+[redis.master]
+host = "redis-slot-game-master"
+port = "6379"
+
+
+[redis.slave]
+host = "redis-slot-game-slave"
+port = "6379"
+
+[web]
+port = "9453"
+
+# DB
+[db]
+user = "slot-test-admin"
+pass = "qwe123"
+connMaxLifetime = 60
+
+[db.SLOT_TOOL.M]
+ip = "mysql-slot-game"
+host = "mysql-slot-game"
+port = "3306"
+dbName = "SLOT_TOOL"
+
+[db.SLOT_GAME.M]
+ip = "mysql-slot-game"
+host = "mysql-slot-game"
+port = "3306"
+dbName = "SLOT_GAME"
+
+# DRD DB
+[drd]
+user = "rd1gcphhslot_pro"
+pass = "1u31oge41og2k7ej4g4"
+
+[drd.INSLOT_GAME_DB.M]
+ip = "drd-slot-pepper-master"
+host = "drd-slot-pepper-master"
+port = "3306"
+dbName = "HHSLOT_GAME_DB"
+
+# MongoDB
+[mdb]
+ip = "mongodb-slot-game-master"
+port = "27017"
+
+# Url
+[url]
+ws = "www.in-slot.com/starfruit/api"
+wsSlot = "www.in-slot.com/starfruit/apiSlot"
+wsCrush = "www.in-slot.com/starfruit/apiCrush"
+source = "in-slot.sfyzz.com/"
+localSourceSlot = "www.in-slot.com/starfruit/slot"
+localSourceCrush = "www.in-slot.com/starfruit/crush"
+localPic = "www.in-slot.com/starfruit"
+InURL = "http://q-api.inslotx.com/elibomApi/WebService/"
+betHistory = "ex.in-games.com/user-bet-record/#/"
+gameRule = "ex.in-games.com/rule/#/"
+
+# Host白名單
+[allow.host]
+host1 = "in-slot-star"
+host2 = "starfruit"
+host3 = "starfruit-random-internal"
+
+[api.onion]
+name = "onion"
+address = "play.in-games.com"
+secure = false
+
+#彩金開關
+[jackpot]
+switch = false

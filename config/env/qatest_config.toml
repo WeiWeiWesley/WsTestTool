@@ -1,0 +1,80 @@
+title = "sys_config"
+
+# RD5 API
+[api.durian]
+ip = "10.251.32.101"
+host = "bb.qa.d2"
+port = "80"
+
+# RD3 API
+[api.rd3]
+ip = "10.251.34.166"
+host = ""
+port = "80"
+
+# RD6 API
+[api.rd6]
+ip = "10.251.34.50"
+host = "api.vir777.com"
+port = "80"
+
+
+# DRD API
+[api.drd]
+ip = "10.108.9.31"
+host = "10.108.9.31"
+port = "20300"
+auth = ""
+
+# [redis.master]
+# ip = "127.0.0.1"
+# host = "redis-slot-game-master"
+# port = "6379"
+
+# [redis.slave]
+# ip = "127.0.0.1"
+# host = "redis-slot-game-slave"
+# port = "6379"
+
+[memcache]
+ip = "10.251.33.152"
+port = "11212"
+
+[web]
+port = "9453"
+
+# DB
+[db]
+user = "slot-test-admin"
+pass = "qwe123"
+connMaxLifetime = 60
+
+[db.SLOT_TOOL.M]
+ip = "mysql-slot-game"
+host = "mysql-slot-game"
+port = "3306"
+dbName = "SLOT_TOOL"
+
+[db.SLOT_GAME.M]
+ip = "mysql-slot-game"
+host = "mysql-slot-game"
+port = "3306"
+dbName = "SLOT_GAME"
+
+# MongoDB
+[mdb]
+ip = "mongodb-slot-game-master"
+port = "27017"
+
+# Url
+[url]
+ws = "/starfruit/api"
+localSource = "/starfruit/slot"
+localPic = "/starfruit"
+source = "in-slot-storage.vir999.com"
+InURL = "http://q-api.inslotx.com/elibomApi/WebService/"
+
+# Host白名單
+[allow.host]
+host1 = "www.vir999.com"
+host2 = "10.251.33.171:9453"

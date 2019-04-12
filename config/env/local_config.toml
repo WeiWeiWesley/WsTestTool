@@ -1,0 +1,60 @@
+title = "sys_config"
+
+[api.jackpot]
+ip = "127.0.0.1"
+host = "127.0.0.1"
+port = "8000"
+auth = "jackpot_auth"
+
+
+[[server]]
+name = "pepper"
+port = "8501"
+address = "localhost"
+api_key = ""
+secure = false
+
+[web]
+port = "9453"
+
+# DB
+[db]
+user = "root"
+pass = "qwe123"
+connMaxLifetime = 180
+
+[db.SLOT_GAME.M]
+ip = "127.0.0.1"
+host = ""
+port = "3306"
+dbName = "SLOT_GAME"
+
+# Redis
+[redis.master]
+host = "127.0.0.1"
+port = "6379"
+password = ""
+
+[redis.slave]
+host = "127.0.0.1"
+port = "6379"
+password = ""
+
+# Url
+[url]
+wsSlot = "127.0.0.1:9453/starfruit/apiSlot"
+wsCrush = "127.0.0.1:9453/starfruit/apiCrush"
+source = "storage.googleapis.com/slot-game-dev"
+localSourceSlot = "127.0.0.1:9453/starfruit/slot"
+localSourceCrush = "127.0.0.1:9453/starfruit/crush"
+localPic = "127.0.0.1:9453/starfruit"
+InURL = "http://d-api.inslotx.com/elibomApi/WebService/"
+
+# Host白名單
+[allow.host]
+host1 = "127.0.0.1:9453"
+host2 = "localhost:9453"
+
+#彩金開關
+[jackpot]
+switch = false
