@@ -12,6 +12,7 @@ import (
 type Receive struct {
 	Error   error
 	Message []byte
+	Key     string
 }
 
 //JPChan Jackpot channel
@@ -66,11 +67,10 @@ func receiveJackpot(key string) {
 				return
 			}
 
-			fmt.Printf("response[%s]: %+v \n", key, string(message))
-
 			JPChan <- Receive{
 				Error:   err,
 				Message: message,
+				Key:     key,
 			}
 		}
 	}

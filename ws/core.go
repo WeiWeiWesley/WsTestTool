@@ -28,7 +28,7 @@ var (
 )
 
 //Init 設定初始化
-func Init(path string, key string) {
+func Init(path string) {
 	//Load config
 	if _, err := toml.DecodeFile(path, &config); err != nil {
 		log.Print("error", err.Error())
@@ -38,17 +38,14 @@ func Init(path string, key string) {
 	Conn = make(map[string]*websocket.Conn)
 	jpSend = make(chan []byte)
 	JPChan = make(chan Receive)
+}
 
-	//Add Connection setting && listening
-	{
-		//連線 逾時 3s
-		websocket.DefaultDialer.HandshakeTimeout = 3 * time.Second
-
-		//Jackpot
-		ConnJpServer(false, "", key)
-	}
-
-	//Start listening
+//Connect Add Connection setting && listening
+func Connect(key string) {
+	//連線 逾時 3s
+	websocket.DefaultDialer.HandshakeTimeout = 3 * time.Second
+	//Jackpot
+	ConnJpServer(false, "", key)
 	keepWS(key)
 }
 
@@ -71,14 +68,12 @@ func keepWS(key string) {
 					}
 
 				} else {
-					log.Print("error", "Conn ")
+					log.Print("error", "Conn[jackpot_server"+key+"] not exists")
 				}
 			}
 		}
 	}(key)
 
 	//Receive message
-	go func(key string) {
-		receiveJackpot(key) //Jackpot websocket receiver
-	}(key)
+	go receiveJackpot(key) //Jackpot websocket receiver
 }
