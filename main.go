@@ -64,8 +64,16 @@ func run() {
 
 	for i := 0; i < times; i++ {
 		time.Sleep(delay * time.Nanosecond)
-		ws.Connect(strconv.Itoa(i))
+		if err := ws.Connect(strconv.Itoa(i), "ws/keep"); err != nil {
+			fail++
+		}
 	}
+
+	go func() {
+		if fail == times {
+			closeSignal <- true
+		}
+	}()
 }
 
 func result() {
@@ -84,7 +92,7 @@ func result() {
 func countResult() {
 	for {
 		select {
-		case data := <-ws.JPChan:
+		case data := <-ws.ReceiveChan:
 			sentCount++
 			fmt.Println("count", success, string(data.Message))
 

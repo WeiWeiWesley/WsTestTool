@@ -1,7 +1,7 @@
 package ws
 
 import (
-	"starfruit/kernel/common/log"
+	"fmt"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -31,22 +31,27 @@ var (
 func Init(path string) {
 	//Load config
 	if _, err := toml.DecodeFile(path, &config); err != nil {
-		log.Print("error", err.Error())
+		fmt.Println(err)
 	}
 
 	//Channel & map init
 	Conn = make(map[string]*websocket.Conn)
 	jpSend = make(chan []byte)
-	JPChan = make(chan Receive)
+	ReceiveChan = make(chan Receive)
 }
 
 //Connect Add Connection setting && listening
-func Connect(key string) {
+func Connect(key, path string) error {
 	//連線 逾時 3s
 	websocket.DefaultDialer.HandshakeTimeout = 3 * time.Second
 	//Jackpot
-	ConnJpServer(false, "", key)
+	if err := ConnJpServer(key, path); err != nil {
+		return err
+	}
+	
 	keepWS(key)
+
+	return nil
 }
 
 //Start listening
@@ -57,23 +62,19 @@ func keepWS(key string) {
 			select {
 			case msg := <-jpSend:
 				//檢查map連線存在
-				if conn, ok := Conn["jackpot_server"+key]; ok {
+				if conn, ok := Conn[key]; ok {
 					err := conn.WriteMessage(websocket.TextMessage, msg)
 					if err != nil {
-						log.Print("error", "WriteMessage error: "+err.Error())
-
-						//嘗試重新連線
-						time.Sleep(5 * time.Second)
-						ReConnection(jpConnToken, key)
+						fmt.Println(err)
 					}
 
 				} else {
-					log.Print("error", "Conn[jackpot_server"+key+"] not exists")
+					fmt.Println("Connection not exists")
 				}
 			}
 		}
 	}(key)
 
 	//Receive message
-	go receiveJackpot(key) //Jackpot websocket receiver
+	go receive(key) //websocket receiver
 }
