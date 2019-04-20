@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -26,12 +26,15 @@ var (
 )
 
 var (
-	config  string
-	help    bool
-	times   int
+	config  string //設定檔
+	help    bool   //使用方法
+	times   int    //測試次數
 	delay   time.Duration
-	d       int
-	timeout int
+	d       int    //每筆發送延遲
+	timeout int    //最大等待時間
+	host    string //目標網域
+	path    string // 目標URL
+	watch   bool   //觀察每筆回傳
 )
 
 func init() {
@@ -40,15 +43,22 @@ func init() {
 	flag.IntVar(&times, "n", 1, "Test times.")
 	flag.IntVar(&d, "d", 10, "Time duration between each request.")
 	flag.IntVar(&timeout, "timeout", 10, "Test times.")
+	flag.StringVar(&host, "H", "", "Host.")
+	flag.StringVar(&path, "P", "", "URL path.")
+	flag.BoolVar(&watch, "w", false, "Watch each resposnes.")
+	flag.Parse()
 }
 
 func main() {
-	flag.Parse()
+
 	{
 		delay = time.Duration(d)
 	}
 
-	if help {
+	//參數檢驗
+	if err := checkParam(); err != nil {
+		log.Print("error", err.Error())
+		fmt.Println()
 		flag.Usage()
 		return
 	}
@@ -64,9 +74,16 @@ func run() {
 
 	for i := 0; i < times; i++ {
 		time.Sleep(delay * time.Nanosecond)
-		if err := ws.Connect(strconv.Itoa(i), "ws/keep"); err != nil {
+		if err := ws.Connect(strconv.Itoa(i), host, path); err != nil {
 			fail++
+			continue
 		}
+
+		msg := make(map[string]interface{})
+		msg["command"] = "ping"
+		msg["key"] = strconv.Itoa(i)
+
+		ws.Send(msg)
 	}
 
 	go func() {
@@ -80,11 +97,13 @@ func result() {
 	select {
 	case <-closeSignal:
 		fmt.Println()
+		fmt.Println("=======================================================================")
 		log.Print("info", "執行數量:", times)
 		log.Print("info", "執行延遲:", delay, "; 1 nanosecond = 0.0000000001 seconds")
 		log.Print("info", "成功數量:", success)
 		log.Print("info", "失敗數量:", fail)
 		log.Print("info", "發送完畢")
+		fmt.Println("=======================================================================")
 		time.Sleep(time.Second)
 	}
 }
@@ -94,14 +113,16 @@ func countResult() {
 		select {
 		case data := <-ws.ReceiveChan:
 			sentCount++
-			fmt.Println("count", success, string(data.Message))
+			response := string(data.Message)
 
-			var result Receive
-			json.Unmarshal(data.Message, &result)
-			if result.Code != 200 {
-				fail++
-			} else {
+			if watch {
+				log.Print("info", "Sent count:", sentCount, "Response:", response)
+			}
+
+			if len(response) > 0 {
 				success++
+			} else {
+				fail++
 			}
 
 			if sentCount == times {
@@ -118,4 +139,21 @@ func usage() {
 	`)
 
 	flag.PrintDefaults()
+}
+
+func checkParam() error {
+	if help {
+		flag.Usage()
+		return errors.New("")
+	}
+
+	if len(host) < 1 {
+		return errors.New("Please use -H add host")
+	}
+
+	if len(path) < 1 {
+		return errors.New("Please use -P add url path")
+	}
+
+	return nil
 }

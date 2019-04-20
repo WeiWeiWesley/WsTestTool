@@ -1,7 +1,6 @@
 package ws
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/url"
 
@@ -17,21 +16,20 @@ type Receive struct {
 //ReceiveChan Jackpot channel
 var ReceiveChan chan Receive
 
-//SendToJackpot Api發送
-func SendToJackpot(data map[string]interface{}) error {
+//Send Api發送
+func Send(data map[string]interface{}) error {
 	//發送目標
 	go func() {
-		msg, _ := json.Marshal(data)
-		jpSend <- msg
+		sendChan <- data
 	}()
 
 	return nil
 }
 
-//ConnJpServer 與 JP Server建立連線
-func ConnJpServer(key, path string) error {
+//ConnServer 與 Server建立連線
+func ConnServer(key, host, path string) error {
 	var err error
-	jpURL := url.URL{Scheme: "ws", Host: config.API.JP.Host + ":" + config.API.JP.Port, Path: path}
+	jpURL := url.URL{Scheme: "ws", Host: host, Path: path}
 	Conn[key], _, err = websocket.DefaultDialer.Dial(jpURL.String(), nil)
 	if err != nil {
 		fmt.Println(err)
@@ -51,7 +49,8 @@ func receive(key string) {
 				fmt.Println(err)
 				return
 			}
-
+			
+			// fmt.Println(key, string(message)) //DEBUG
 			ReceiveChan <- Receive{
 				Error:   err,
 				Message: message,

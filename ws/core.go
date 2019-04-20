@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -24,7 +25,7 @@ type Config struct {
 var (
 	Conn   map[string]*websocket.Conn
 	config Config
-	jpSend chan []byte
+	sendChan chan map[string]interface{}
 )
 
 //Init 設定初始化
@@ -36,19 +37,18 @@ func Init(path string) {
 
 	//Channel & map init
 	Conn = make(map[string]*websocket.Conn)
-	jpSend = make(chan []byte)
+	sendChan = make(chan map[string]interface{})
 	ReceiveChan = make(chan Receive)
 }
 
 //Connect Add Connection setting && listening
-func Connect(key, path string) error {
+func Connect(key, host, path string) error {
 	//連線 逾時 3s
 	websocket.DefaultDialer.HandshakeTimeout = 3 * time.Second
-	//Jackpot
-	if err := ConnJpServer(key, path); err != nil {
+	if err := ConnServer(key, host, path); err != nil {
 		return err
 	}
-	
+
 	keepWS(key)
 
 	return nil
@@ -57,10 +57,19 @@ func Connect(key, path string) error {
 //Start listening
 func keepWS(key string) {
 	//Send message
-	go func(key string) {
+	go func() {
 		for {
 			select {
-			case msg := <-jpSend:
+			case data := <-sendChan:
+				key, ok := data["key"].(string)
+				if !ok {
+					fmt.Println(data)
+					break
+				}
+
+				delete(data, "key")
+				msg, _ := json.Marshal(data)
+				
 				//檢查map連線存在
 				if conn, ok := Conn[key]; ok {
 					err := conn.WriteMessage(websocket.TextMessage, msg)
@@ -73,7 +82,7 @@ func keepWS(key string) {
 				}
 			}
 		}
-	}(key)
+	}()
 
 	//Receive message
 	go receive(key) //websocket receiver
