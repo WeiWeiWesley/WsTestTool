@@ -4,7 +4,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"os"
 	"strconv"
 	"time"
 
@@ -12,12 +11,14 @@ import (
 	"WsTestTool/ws"
 )
 
+//Receive 接收範例
 type Receive struct {
 	Cmd   string `json:"commond"`
 	Code  int    `json:"code"`
 	Error string `json:"error"`
 }
 
+//統計&核心
 var (
 	closeSignal = make(chan bool)
 	success     int
@@ -25,10 +26,10 @@ var (
 	sentCount   int
 )
 
+//參數
 var (
-	config  string //設定檔
-	help    bool   //使用方法
-	times   int    //測試次數
+	help    bool //使用方法
+	times   int  //測試次數
 	delay   time.Duration
 	d       int    //每筆發送延遲
 	timeout int    //最大等待時間
@@ -38,23 +39,21 @@ var (
 )
 
 func init() {
+	//Require
+	flag.StringVar(&host, "H", "", "Host.")
+	flag.StringVar(&path, "P", "", "URL path.")
+	//Options
 	flag.BoolVar(&help, "h", false, "Usage.")
-	flag.StringVar(&config, "c", "local", "Test config file name.")
+	flag.BoolVar(&watch, "w", false, "Watch each resposnes.")
 	flag.IntVar(&times, "n", 1, "Test times.")
 	flag.IntVar(&d, "d", 10, "Time duration between each request.")
 	flag.IntVar(&timeout, "timeout", 10, "Test times.")
-	flag.StringVar(&host, "H", "", "Host.")
-	flag.StringVar(&path, "P", "", "URL path.")
-	flag.BoolVar(&watch, "w", false, "Watch each resposnes.")
 	flag.Parse()
+
+	delay = time.Duration(d)
 }
 
 func main() {
-
-	{
-		delay = time.Duration(d)
-	}
-
 	//參數檢驗
 	if err := checkParam(); err != nil {
 		log.Print("error", err.Error())
@@ -63,13 +62,16 @@ func main() {
 		return
 	}
 
+	//Sender
 	run()
 
+	//Receiver
 	result()
 }
 
+//Sender
 func run() {
-	ws.Init("config/" + config + ".toml")
+	ws.Init()
 	go countResult()
 
 	for i := 0; i < times; i++ {
@@ -93,6 +95,7 @@ func run() {
 	}()
 }
 
+//Receiver
 func result() {
 	select {
 	case <-closeSignal:
@@ -133,11 +136,6 @@ func countResult() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `
-		Usage: Websocket Test Tool
-		Options:
-	`)
-
 	flag.PrintDefaults()
 }
 

@@ -5,36 +5,17 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/BurntSushi/toml"
 	"github.com/gorilla/websocket"
 )
-
-//Config 連線設定
-type Config struct {
-	API struct {
-		JP struct {
-			IP   string `toml:"ip"`
-			Host string `toml:"host"`
-			Port string `toml:"port"`
-			Auth string `toml:"auth"`
-		} `toml:"jackpot"`
-	} `toml:"api"`
-}
 
 //連線
 var (
 	Conn   map[string]*websocket.Conn
-	config Config
 	sendChan chan map[string]interface{}
 )
 
 //Init 設定初始化
-func Init(path string) {
-	//Load config
-	if _, err := toml.DecodeFile(path, &config); err != nil {
-		fmt.Println(err)
-	}
-
+func Init() {
 	//Channel & map init
 	Conn = make(map[string]*websocket.Conn)
 	sendChan = make(chan map[string]interface{})
