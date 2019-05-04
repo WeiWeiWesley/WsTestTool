@@ -54,6 +54,11 @@ func init() {
 }
 
 func main() {
+	if help {
+		flag.Usage()
+		return
+	}
+
 	//參數檢驗
 	if err := checkParam(); err != nil {
 		log.Print("error", err.Error())
@@ -140,17 +145,8 @@ func usage() {
 }
 
 func checkParam() error {
-	if help {
-		flag.Usage()
-		return errors.New("")
-	}
-
 	if len(host) < 1 {
 		return errors.New("Please use -H add host")
-	}
-
-	if len(path) < 1 {
-		return errors.New("Please use -P add url path")
 	}
 
 	return nil
