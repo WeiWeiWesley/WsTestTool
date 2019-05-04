@@ -124,7 +124,7 @@ func countResult() {
 			response := string(data.Message)
 
 			if watch {
-				log.Print("info", "Sent count:", sentCount, "Response:", response)
+				log.Print("info", "Sent count:", sentCount, "Response:", response, "Time:", data.TimeSpent.String())
 			}
 
 			if len(response) > 0 {

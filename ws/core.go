@@ -8,16 +8,22 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type ConnInfo struct {
+	Ws       *websocket.Conn
+	SendTime time.Time
+}
+
 //連線
 var (
-	Conn   map[string]*websocket.Conn
+	Conn map[string]ConnInfo
 	sendChan chan map[string]interface{}
 )
 
 //Init 設定初始化
 func Init() {
 	//Channel & map init
-	Conn = make(map[string]*websocket.Conn)
+	Conn = make(map[string]ConnInfo)
+
 	sendChan = make(chan map[string]interface{})
 	ReceiveChan = make(chan Receive)
 }
@@ -50,10 +56,14 @@ func keepWS(key string) {
 
 				delete(data, "key")
 				msg, _ := json.Marshal(data)
-				
+
 				//檢查map連線存在
 				if conn, ok := Conn[key]; ok {
-					err := conn.WriteMessage(websocket.TextMessage, msg)
+					Conn[key] = ConnInfo{
+						Ws: conn.Ws,
+						SendTime: time.Now(),
+					}
+					err := conn.Ws.WriteMessage(websocket.TextMessage, msg)
 					if err != nil {
 						fmt.Println(err)
 					}
