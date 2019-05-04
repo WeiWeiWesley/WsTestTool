@@ -24,6 +24,9 @@ var (
 	success     int
 	fail        int
 	sentCount   int
+	execTime    time.Duration
+	avgTime     time.Duration
+	maxTime     time.Duration
 )
 
 //參數
@@ -109,7 +112,9 @@ func result() {
 		log.Print("info", "執行數量:", times)
 		log.Print("info", "執行延遲:", delay, "; 1 nanosecond = 0.0000000001 seconds")
 		log.Print("info", "成功數量:", success)
-		log.Print("info", "失敗數量:", fail)
+		log.Print("info", "總執行時間:", execTime)
+		log.Print("info", "平均回應時間:", avgTime)
+		log.Print("info", "最大回應時間:", maxTime)
 		log.Print("info", "發送完畢")
 		fmt.Println("=======================================================================")
 		time.Sleep(time.Second)
@@ -133,7 +138,14 @@ func countResult() {
 				fail++
 			}
 
+			if maxTime < data.TimeSpent {
+				maxTime = data.TimeSpent
+			}
+
+			execTime += data.TimeSpent
+
 			if sentCount == times {
+				avgTime = execTime / time.Duration(times)
 				closeSignal <- true
 			}
 		}

@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+//ConnInfo connection info
 type ConnInfo struct {
 	Ws       *websocket.Conn
 	SendTime time.Time

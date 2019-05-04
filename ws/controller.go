@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+//Receive Receive data
 type Receive struct {
 	Error     error
 	Message   []byte
