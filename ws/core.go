@@ -10,13 +10,16 @@ import (
 
 //ConnInfo connection info
 type ConnInfo struct {
+	Num      string
 	Ws       *websocket.Conn
 	SendTime time.Time
+	Repeat   int
+	Wait     time.Duration
 }
 
 //連線
 var (
-	Conn map[string]ConnInfo
+	Conn     map[string]ConnInfo
 	sendChan chan map[string]interface{}
 )
 
@@ -30,20 +33,20 @@ func Init() {
 }
 
 //Connect Add Connection setting && listening
-func Connect(key, host, path string) error {
+func Connect(key, host, path string, repeat int) error {
 	//連線 逾時 3s
 	websocket.DefaultDialer.HandshakeTimeout = 3 * time.Second
 	if err := ConnServer(key, host, path); err != nil {
 		return err
 	}
 
-	keepWS(key)
+	keepWS(key, repeat)
 
 	return nil
 }
 
 //Start listening
-func keepWS(key string) {
+func keepWS(key string, repeat int) {
 	//Send message
 	go func() {
 		for {
@@ -61,13 +64,29 @@ func keepWS(key string) {
 				//檢查map連線存在
 				if conn, ok := Conn[key]; ok {
 					Conn[key] = ConnInfo{
-						Ws: conn.Ws,
-						SendTime: time.Now(),
+						Ws:     conn.Ws,
+						Num:    key,
+						Repeat: repeat,
 					}
-					err := conn.Ws.WriteMessage(websocket.TextMessage, msg)
-					if err != nil {
-						fmt.Println(err)
-					}
+
+					// go func() {
+						for Conn[key].Repeat > 0 {
+							err := conn.Ws.WriteMessage(websocket.TextMessage, msg)
+							if err != nil {
+								fmt.Println(err)
+							}
+
+							Conn[key] = ConnInfo{
+								Ws:       conn.Ws,
+								SendTime: time.Now(),
+								Num:      Conn[key].Num,
+								Repeat:   Conn[key].Repeat - 1,
+								Wait:     Conn[key].Wait,
+							}
+
+							time.Sleep(100)
+						}
+					// }()
 
 				} else {
 					fmt.Println("Connection not exists")

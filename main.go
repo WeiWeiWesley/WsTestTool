@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -24,21 +25,26 @@ var (
 	success     int
 	fail        int
 	sentCount   int
+	startTime   time.Time
 	execTime    time.Duration
 	avgTime     time.Duration
 	maxTime     time.Duration
+	endTimes    int
 )
 
 //參數
 var (
-	help    bool //使用方法
-	times   int  //測試次數
-	delay   time.Duration
-	d       int    //每筆發送延遲
-	timeout int    //最大等待時間
-	host    string //目標網域
-	path    string // 目標URL
-	watch   bool   //觀察每筆回傳
+	help           bool //使用方法
+	times          int  //測試次數
+	delay          time.Duration
+	d              int    //每筆發送延遲
+	timeout        int    //最大等待時間
+	host           string //目標網域
+	path           string // 目標URL
+	watch          bool   //觀察每筆回傳
+	request        string //json string param
+	repeat         int
+	repeatDuration time.Duration
 )
 
 func init() {
@@ -51,9 +57,17 @@ func init() {
 	flag.IntVar(&times, "n", 1, "Test times.")
 	flag.IntVar(&d, "d", 10, "Time duration between each request.")
 	flag.IntVar(&timeout, "timeout", 10, "Test times.")
+	flag.IntVar(&repeat, "r", 1, "Re-send message times.")
+	flag.StringVar(&request, "req", "", "Json string param")
 	flag.Parse()
 
 	delay = time.Duration(d)
+
+	endTimes = times
+	if repeat > 1 {
+		endTimes = times * repeat
+	}
+
 }
 
 func main() {
@@ -82,22 +96,32 @@ func run() {
 	ws.Init()
 	go countResult()
 
+	startTime = time.Now()
 	for i := 0; i < times; i++ {
 		time.Sleep(delay * time.Nanosecond)
-		if err := ws.Connect(strconv.Itoa(i), host, path); err != nil {
+		if err := ws.Connect(strconv.Itoa(i), host, path, repeat); err != nil {
 			fail++
 			continue
 		}
 
 		msg := make(map[string]interface{})
-		msg["command"] = "ping"
+		if request != "" {
+			err := json.Unmarshal([]byte(request), &msg)
+			if err != nil {
+				log.Print("error", err.Error())
+				closeSignal <- true
+			}
+		} else {
+			msg["command"] = "ping"
+		}
+
 		msg["key"] = strconv.Itoa(i)
 
 		ws.Send(msg)
 	}
 
 	go func() {
-		if fail == times {
+		if fail == endTimes {
 			closeSignal <- true
 		}
 	}()
@@ -142,9 +166,8 @@ func countResult() {
 				maxTime = data.TimeSpent
 			}
 
-			execTime += data.TimeSpent
-
-			if sentCount == times {
+			if sentCount == endTimes {
+				execTime = time.Since(startTime)
 				avgTime = execTime / time.Duration(times)
 				closeSignal <- true
 			}
