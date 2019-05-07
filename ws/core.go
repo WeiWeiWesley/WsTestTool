@@ -69,7 +69,7 @@ func keepWS(key string, repeat int) {
 						Repeat: repeat,
 					}
 
-					// go func() {
+					go func() {
 						for Conn[key].Repeat > 0 {
 							err := conn.Ws.WriteMessage(websocket.TextMessage, msg)
 							if err != nil {
@@ -86,7 +86,7 @@ func keepWS(key string, repeat int) {
 
 							time.Sleep(100)
 						}
-					// }()
+					}()
 
 				} else {
 					fmt.Println("Connection not exists")

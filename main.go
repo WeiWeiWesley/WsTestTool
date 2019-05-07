@@ -29,6 +29,7 @@ var (
 	execTime    time.Duration
 	avgTime     time.Duration
 	maxTime     time.Duration
+	sunTime     time.Duration
 	endTimes    int
 )
 
@@ -37,12 +38,13 @@ var (
 	help           bool //使用方法
 	times          int  //測試次數
 	delay          time.Duration
-	d              int    //每筆發送延遲
-	timeout        int    //最大等待時間
-	host           string //目標網域
-	path           string // 目標URL
-	watch          bool   //觀察每筆回傳
-	request        string //json string param
+	d              int         //每筆發送延遲
+	to             int         //最大等待秒數
+	timeout        *time.Timer //最大等待時間
+	host           string      //目標網域
+	path           string      // 目標URL
+	watch          bool        //觀察每筆回傳
+	request        string      //json string param
 	repeat         int
 	repeatDuration time.Duration
 )
@@ -50,18 +52,18 @@ var (
 func init() {
 	//Require
 	flag.StringVar(&host, "H", "", "Host.")
-	flag.StringVar(&path, "P", "", "URL path.")
 	//Options
 	flag.BoolVar(&help, "h", false, "Usage.")
 	flag.BoolVar(&watch, "w", false, "Watch each resposnes.")
 	flag.IntVar(&times, "n", 1, "Test times.")
 	flag.IntVar(&d, "d", 10, "Time duration between each request.")
-	flag.IntVar(&timeout, "timeout", 10, "Test times.")
+	flag.IntVar(&to, "to", 10, "Max waitting time.")
 	flag.IntVar(&repeat, "r", 1, "Re-send message times.")
 	flag.StringVar(&request, "req", "", "Json string param")
 	flag.Parse()
 
 	delay = time.Duration(d)
+	timeout = time.NewTimer(time.Duration(to) * time.Second)
 
 	endTimes = times
 	if repeat > 1 {
@@ -85,16 +87,16 @@ func main() {
 	}
 
 	//Sender
-	run()
+	go run()
 
-	//Receiver
-	result()
+	//Waitting response
+	wait()
 }
 
 //Sender
 func run() {
 	ws.Init()
-	go countResult()
+	go monitor()
 
 	startTime = time.Now()
 	for i := 0; i < times; i++ {
@@ -128,24 +130,16 @@ func run() {
 }
 
 //Receiver
-func result() {
+func wait() {
 	select {
+	case <-timeout.C:
+		result(true)
 	case <-closeSignal:
-		fmt.Println()
-		fmt.Println("=======================================================================")
-		log.Print("info", "執行數量:", times)
-		log.Print("info", "執行延遲:", delay, "; 1 nanosecond = 0.0000000001 seconds")
-		log.Print("info", "成功數量:", success)
-		log.Print("info", "總執行時間:", execTime)
-		log.Print("info", "平均回應時間:", avgTime)
-		log.Print("info", "最大回應時間:", maxTime)
-		log.Print("info", "發送完畢")
-		fmt.Println("=======================================================================")
-		time.Sleep(time.Second)
+		result(false)
 	}
 }
 
-func countResult() {
+func monitor() {
 	for {
 		select {
 		case data := <-ws.ReceiveChan:
@@ -166,9 +160,9 @@ func countResult() {
 				maxTime = data.TimeSpent
 			}
 
+			sunTime += data.TimeSpent
+
 			if sentCount == endTimes {
-				execTime = time.Since(startTime)
-				avgTime = execTime / time.Duration(times)
 				closeSignal <- true
 			}
 		}
@@ -185,4 +179,26 @@ func checkParam() error {
 	}
 
 	return nil
+}
+
+func result(timeout bool) {
+	msg := "發送完畢"
+	if timeout {
+		msg = "等待逾時"
+	}
+
+	execTime = time.Since(startTime)
+	avgTime = sunTime / time.Duration(endTimes)
+
+	fmt.Println()
+	fmt.Println("============================" + msg + "===================================")
+	log.Print("info", "執行延遲:", delay, "; 1 nanosecond = 0.0000000001 seconds")
+	log.Print("info", "併發連線數量:", times)
+	log.Print("info", "成功請求數量:", success)
+	log.Print("info", "總執行時間:", execTime)
+	log.Print("info", "平均回應時間:", avgTime)
+	log.Print("info", "最大回應時間:", maxTime)
+	log.Print("warn", "失敗請求數量:", endTimes-success)
+	fmt.Println("=======================================================================")
+	time.Sleep(time.Second)
 }
