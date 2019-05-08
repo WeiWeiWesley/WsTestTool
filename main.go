@@ -47,6 +47,7 @@ var (
 	request        string      //json string param
 	repeat         int
 	repeatDuration time.Duration
+	timing         string
 )
 
 func init() {
@@ -60,6 +61,7 @@ func init() {
 	flag.IntVar(&to, "to", 10, "Max waitting time.")
 	flag.IntVar(&repeat, "r", 1, "Re-send message times.")
 	flag.StringVar(&request, "req", "", "Json string param")
+	flag.StringVar(&timing, "timing", "", "Start at particular time ex. 2019-05-08 15:04:00")
 	flag.Parse()
 
 	delay = time.Duration(d)
@@ -84,6 +86,35 @@ func main() {
 		fmt.Println()
 		flag.Usage()
 		return
+	}
+
+	//定時器
+	if len(timing) > 0 {
+		timeClock, err := time.Parse("2006-01-02 15:04:05", timing)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		localTime, err := time.LoadLocation("Asia/Taipei")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		timeClock = timeClock.In(localTime).Add(-8 * time.Hour)
+
+		now := time.Now()
+		if now.After(timeClock) {
+			log.Print("error", "Time "+timing+" should after current time.")
+			fmt.Println()
+			flag.Usage()
+			return
+		}
+
+		log.Print("warn", "預計於: "+timing+" 開始執行...")
+		waitTime := timeClock.Sub(now)
+		timeout.Reset(waitTime + time.Duration(to)*time.Second)
+		time.Sleep(waitTime)
 	}
 
 	//Sender
