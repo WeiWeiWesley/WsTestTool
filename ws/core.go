@@ -36,9 +36,13 @@ func Init() {
 func Connect(key, host, path string, repeat int) error {
 	//連線 逾時 3s
 	websocket.DefaultDialer.HandshakeTimeout = 3 * time.Second
-	if err := ConnServer(key, host, path); err != nil {
+	conn, _, err := websocket.DefaultDialer.Dial(host, nil)
+	if err != nil {
+		fmt.Println(err)
 		return err
 	}
+
+	Conn[key] = ConnInfo{Ws: conn}
 
 	keepWS(key, repeat)
 

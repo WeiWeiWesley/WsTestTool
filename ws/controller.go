@@ -2,10 +2,7 @@ package ws
 
 import (
 	"fmt"
-	"net/url"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 //Receive Receive data
@@ -25,20 +22,6 @@ func Send(data map[string]interface{}) error {
 	go func() {
 		sendChan <- data
 	}()
-
-	return nil
-}
-
-//ConnServer 與 Server建立連線
-func ConnServer(key, host, path string) error {
-	jpURL := url.URL{Scheme: "ws", Host: host, Path: path}
-	conn, _, err := websocket.DefaultDialer.Dial(jpURL.String(), nil)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	Conn[key] = ConnInfo{Ws: conn}
 
 	return nil
 }
