@@ -5,11 +5,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"strconv"
+	"sync"
 	"time"
 
 	"WsTestTool/log"
 	"WsTestTool/ws"
+
+	"github.com/gorilla/websocket"
 )
 
 //Receive 接收範例
@@ -118,46 +120,62 @@ func main() {
 	}
 
 	//Sender
-	go run()
+	run()
 
-	//Waitting response
-	wait()
+}
+
+//Conn Conn
+type Conn struct {
+	Conn *websocket.Conn
+	mu   *sync.Mutex
+}
+
+//SendMsg SendMsg
+func (ws *Conn) sendMsg(msg []byte) error {
+	ws.mu.Lock()
+	defer ws.mu.Unlock()
+
+	err := ws.Conn.WriteMessage(1, msg)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
 }
 
 //Sender
 func run() {
 	ws.Init()
-	go monitor()
-
 	startTime = time.Now()
-	for i := 0; i < times; i++ {
-		time.Sleep(delay * time.Nanosecond)
-		if err := ws.Connect(strconv.Itoa(i), host, path, repeat); err != nil {
-			fail++
-			continue
-		}
 
-		msg := make(map[string]interface{})
-		if request != "" {
-			err := json.Unmarshal([]byte(request), &msg)
-			if err != nil {
-				log.Print("error", err.Error())
-				closeSignal <- true
-			}
-		} else {
-			msg["command"] = "ping"
-		}
-
-		msg["key"] = strconv.Itoa(i)
-
-		ws.Send(msg)
+	conn, err := ws.Connect(host)
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	go func() {
-		if fail == endTimes {
-			closeSignal <- true
+	wsConn := Conn{
+		Conn: conn,
+		mu:   &sync.Mutex{},
+	}
+
+
+	msg := make(map[string]interface{})
+	msg["command"] = "ping"
+
+	b, _ := json.Marshal(msg)
+
+	wsConn.sendMsg(b)
+
+	for {
+		_, res, err := wsConn.Conn.ReadMessage()
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
-	}()
+
+		fmt.Println(string(res))
+	}
 }
 
 //Receiver
@@ -167,36 +185,6 @@ func wait() {
 		result(true)
 	case <-closeSignal:
 		result(false)
-	}
-}
-
-func monitor() {
-	for {
-		select {
-		case data := <-ws.ReceiveChan:
-			sentCount++
-			response := string(data.Message)
-
-			if watch {
-				log.Print("info", "Sent count:", sentCount, "Response:", response, "Time:", data.TimeSpent.String())
-			}
-
-			if len(response) > 0 {
-				success++
-			} else {
-				fail++
-			}
-
-			if maxTime < data.TimeSpent {
-				maxTime = data.TimeSpent
-			}
-
-			sunTime += data.TimeSpent
-
-			if sentCount == endTimes {
-				closeSignal <- true
-			}
-		}
 	}
 }
 
