@@ -7,11 +7,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-//Init 設定初始化
-func Init() {
-
-}
-
 //Connect Add Connection setting && listening
 func Connect(host string) (*websocket.Conn, error) {
 	//連線 逾時 3s

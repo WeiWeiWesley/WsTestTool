@@ -14,31 +14,26 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-//Receive 接收範例
-type Receive struct {
-	Cmd   string `json:"commond"`
-	Code  int    `json:"code"`
-	Error string `json:"error"`
-}
-
 //統計&核心
 var (
-	closeSignal = make(chan bool)
-	success     int
-	fail        int
-	sentCount   int
-	startTime   time.Time
-	execTime    time.Duration
-	avgTime     time.Duration
-	maxTime     time.Duration
-	sunTime     time.Duration
-	endTimes    int
+	successSignal = make(chan bool)
+	sentSignal    = make(chan bool)
+	closeSignal   = make(chan bool)
+	success       int
+	fail          int
+	sentCount     int
+	startTime     time.Time
+	execTime      time.Duration
+	avgTime       time.Duration
+	maxTime       time.Duration
+	sunTime       time.Duration
+	endTimes      int
 )
 
 //參數
 var (
 	help           bool //使用方法
-	times          int  //測試次數
+	threads        int  //併發數量
 	delay          time.Duration
 	d              int         //每筆發送延遲
 	to             int         //最大等待秒數
@@ -47,6 +42,7 @@ var (
 	path           string      // 目標URL
 	watch          bool        //觀察每筆回傳
 	request        string      //json string param
+	reqSend        []byte
 	repeat         int
 	repeatDuration time.Duration
 	timing         string
@@ -58,9 +54,9 @@ func init() {
 	//Options
 	flag.BoolVar(&help, "h", false, "Usage.")
 	flag.BoolVar(&watch, "w", false, "Watch each resposnes.")
-	flag.IntVar(&times, "n", 1, "Test times.")
-	flag.IntVar(&d, "d", 10, "Time duration between each request.")
-	flag.IntVar(&to, "to", 10, "Max waitting time.")
+	flag.IntVar(&threads, "n", 1, "Number of connections.")
+	flag.IntVar(&d, "d", 10, "Time duration(nanosecond) between each request.")
+	flag.IntVar(&to, "to", 10, "Max waitting time(second).")
 	flag.IntVar(&repeat, "r", 1, "Re-send message times.")
 	flag.StringVar(&request, "req", "", "Json string param")
 	flag.StringVar(&timing, "timing", "", "Start at particular time ex. 2019-05-08 15:04:00")
@@ -69,10 +65,24 @@ func init() {
 	delay = time.Duration(d)
 	timeout = time.NewTimer(time.Duration(to) * time.Second)
 
-	endTimes = times
+	endTimes = threads
 	if repeat > 1 {
-		endTimes = times * repeat
+		endTimes = threads * repeat
 	}
+
+	go func() {
+		for {
+			select {
+			case <-sentSignal:
+				sentCount++
+			case <-successSignal:
+				success++
+				if success == endTimes {
+					closeSignal <- true
+				}
+			}
+		}
+	}()
 
 }
 
@@ -113,7 +123,7 @@ func main() {
 			return
 		}
 
-		log.Print("warn", "預計於: "+timing+" 開始執行...")
+		log.Print("warn", "Expected start at: "+timing)
 		waitTime := timeClock.Sub(now)
 		timeout.Reset(waitTime + time.Duration(to)*time.Second)
 		time.Sleep(waitTime)
@@ -122,6 +132,8 @@ func main() {
 	//Sender
 	run()
 
+	//Watting result
+	wait()
 }
 
 //Conn Conn
@@ -146,35 +158,56 @@ func (ws *Conn) sendMsg(msg []byte) error {
 
 //Sender
 func run() {
-	ws.Init()
 	startTime = time.Now()
 
-	conn, err := ws.Connect(host)
-	if err != nil {
-		fmt.Println(err)
-	}
+	var (
+		connPool = make(map[int]Conn) //連線池
+	)
 
-	wsConn := Conn{
-		Conn: conn,
-		mu:   &sync.Mutex{},
-	}
-
-
-	msg := make(map[string]interface{})
-	msg["command"] = "ping"
-
-	b, _ := json.Marshal(msg)
-
-	wsConn.sendMsg(b)
-
-	for {
-		_, res, err := wsConn.Conn.ReadMessage()
+	//建立所有連線
+	for i := 0; i < threads; i++ {
+		conn, err := ws.Connect(host)
 		if err != nil {
 			fmt.Println(err)
-			return
 		}
 
-		fmt.Println(string(res))
+		connPool[i] = Conn{
+			Conn: conn,
+			mu:   &sync.Mutex{},
+		}
+	}
+
+	//併發
+	for i := 0; i < threads; i++ {
+		//重複發送
+		go func(ws Conn) {
+			for i := 0; i < repeat; i++ {
+				err := ws.sendMsg(reqSend)
+				if err != nil {
+					fmt.Println("Send error:", err)
+					return
+				}
+
+				sentSignal <- true
+				time.Sleep(delay)
+			}
+		}(connPool[i])
+
+		//個別監聽
+		go func(ws Conn) {
+			for {
+				_, res, err := ws.Conn.ReadMessage()
+				if err != nil {
+					fmt.Println("Read error:", err)
+					return
+				}
+
+				successSignal <- true
+				if watch {
+					fmt.Println(string(res))
+				}
+			}
+		}(connPool[i])
 	}
 }
 
@@ -197,27 +230,43 @@ func checkParam() error {
 		return errors.New("Please use -H add host")
 	}
 
+	if request != "" {
+		res, err := json.Marshal(request)
+		if err != nil {
+			return errors.New("Please check request format")
+		}
+
+		reqSend = res
+	} else {
+		msg := make(map[string]interface{})
+		msg["command"] = "ping"
+		b, err := json.Marshal(msg)
+		if err != nil {
+			return errors.New("Please check request format")
+		}
+		reqSend = b
+	}
+
 	return nil
 }
 
 func result(timeout bool) {
-	msg := "發送完畢"
+	msg := "Sent Done"
 	if timeout {
-		msg = "等待逾時"
+		msg = "Timeout"
 	}
 
 	execTime = time.Since(startTime)
-	avgTime = sunTime / time.Duration(endTimes)
+	avgTime = execTime / time.Duration(endTimes)
 
 	fmt.Println()
 	fmt.Println("============================" + msg + "===================================")
-	log.Print("info", "執行延遲:", delay, "; 1 nanosecond = 0.0000000001 seconds")
-	log.Print("info", "併發連線數量:", times)
-	log.Print("info", "成功請求數量:", success)
-	log.Print("info", "總執行時間:", execTime)
-	log.Print("info", "平均回應時間:", avgTime)
-	log.Print("info", "最大回應時間:", maxTime)
-	log.Print("warn", "失敗請求數量:", endTimes-success)
+	log.Print("info", "Execution delay between repeat:", delay)
+	log.Print("info", "Number of concurrent connections:", threads)
+	log.Print("info", "Number of successful requests:", success)
+	log.Print("info", "Total execution time:", execTime)
+	log.Print("info", "Average response time:", avgTime)
+	log.Print("warn", "Number of failed requests:", endTimes-success)
 	fmt.Println("=======================================================================")
 	time.Sleep(time.Second)
 }
