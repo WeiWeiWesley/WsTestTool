@@ -16,18 +16,19 @@ import (
 
 //統計&核心
 var (
-	successSignal = make(chan bool)
-	sentSignal    = make(chan bool)
-	closeSignal   = make(chan bool)
-	success       int
-	fail          int
-	sentCount     int
-	startTime     time.Time
-	execTime      time.Duration
-	avgTime       time.Duration
-	maxTime       time.Duration
-	sunTime       time.Duration
-	endTimes      int
+	successSignal     = make(chan bool)
+	sentSignal        = make(chan bool)
+	closeSignal       = make(chan bool)
+	success           int
+	fail              int
+	sentCount         int
+	startTime         time.Time
+	execTime          time.Duration
+	avgTime           time.Duration
+	maxTime           time.Duration
+	sunTime           time.Duration
+	endTimes          int
+	connEstablishTime time.Duration
 )
 
 //參數
@@ -168,7 +169,8 @@ func run() {
 	for i := 0; i < threads; i++ {
 		conn, err := ws.Connect(host)
 		if err != nil {
-			fmt.Println(err)
+			log.Print("error", "Connection establish fail. Please check host")
+			return
 		}
 
 		connPool[i] = Conn{
@@ -176,6 +178,7 @@ func run() {
 			mu:   &sync.Mutex{},
 		}
 	}
+	connEstablishTime = time.Since(startTime)
 
 	//併發
 	for i := 0; i < threads; i++ {
@@ -264,6 +267,7 @@ func result(timeout bool) {
 	log.Print("info", "Execution delay between repeat:", delay)
 	log.Print("info", "Number of concurrent connections:", threads)
 	log.Print("info", "Number of successful requests:", success)
+	log.Print("info", "Time of connections establishment:", connEstablishTime)
 	log.Print("info", "Total execution time:", execTime)
 	log.Print("info", "Average response time:", avgTime)
 	log.Print("warn", "Number of failed requests:", endTimes-success)

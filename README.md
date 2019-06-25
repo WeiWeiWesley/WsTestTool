@@ -28,8 +28,9 @@ WsTestTool
 # Simple test
 
 ```bash=
-# ./exe/mac_amd64 -H "ws://echo.websocket.org" -w -r 3 -n 3
+# ./exe/mac_amd64 -H "ws://echo.websocket.org" -n 2 -r 5 -w
 
+{"command":"ping"}
 {"command":"ping"}
 {"command":"ping"}
 {"command":"ping"}
@@ -42,10 +43,11 @@ WsTestTool
 
 ============================Sent Done===================================
 INFO[0001] [Execution delay between repeat: 10ns]
-INFO[0001] [Number of concurrent connections: 3]
-INFO[0001] [Number of successful requests: 9]
-INFO[0001] [Total execution time: 1.61317515s]
-INFO[0001] [Average response time: 179.241683ms]
+INFO[0001] [Number of concurrent connections: 2]
+INFO[0001] [Number of successful requests: 10]
+INFO[0001] [Time of connections establishment: 954.477849ms]
+INFO[0001] [Total execution time: 1.190156998s]
+INFO[0001] [Average response time: 119.015699ms]
 WARN[0001] [Number of failed requests: 0]
 =======================================================================
 ```
