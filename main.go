@@ -169,7 +169,10 @@ func run() {
 	for i := 0; i < threads; i++ {
 		conn, err := ws.Connect(host)
 		if err != nil {
-			log.Print("error", "Connection establish fail. Please check host")
+			go func ()  {
+				log.Print("error", "Connection establish fail. Please check host")
+				closeSignal <- false
+			}()
 			return
 		}
 
