@@ -86,7 +86,7 @@ func Run() {
 		}(connPool[i])
 
 		//個別監聽
-		go func(ws Conn) {
+		go func(ws Conn, resEquivalent, resHas string) {
 			for {
 				_, res, err := ws.Conn.ReadMessage()
 				if err != nil {
@@ -95,19 +95,43 @@ func Run() {
 				}
 
 				resStr := string(res)
-				if watch {
-					fmt.Println(resStr)
-				}
-
 				if resEquivalent == "" && resHas == "" {
 					successSignal <- true
-				} else if resEquivalent != "" && resStr == resEquivalent {
-					successSignal <- true
-				} else if resHas != "" && strings.Contains(resStr, resHas) {
-					successSignal <- true
+					if watch {
+						fmt.Println(resStr)
+					}
+					continue
+				}
+
+				if resEquivalent != "" {
+					if resStr == resEquivalent {
+						successSignal <- true
+						if watch {
+							fmt.Println(resStr)
+						}
+					} else {
+						if watch {
+							fmt.Printf("resEq: \"%s\" != Response: \"%s\" \n", resEquivalent, resStr)
+						}
+					}
+					continue
+				}
+
+				if resHas != "" {
+					if strings.Contains(resStr, resHas) {
+						successSignal <- true
+						if watch {
+							fmt.Println(resStr)
+						}
+					} else {
+						if watch {
+							fmt.Printf("resHas: \"%s\" not in Response:\"%s\" \n", resHas, resStr)
+						}
+					}
+					continue
 				}
 			}
-		}(connPool[i])
+		}(connPool[i], resEquivalent, resHas)
 	}
 }
 
