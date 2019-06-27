@@ -12,17 +12,23 @@ WsTestTool
   -H string
     	Host.
   -d int
-    	Time duration between each request. (default 10)
-  -h	Usage.
+    	Time duration(nanosecond) between each request (default 10)
+  -h	Usage
   -n int
-    	Test times. (default 1)
+    	Number of connections (default 1)
   -r int
-    	Re-send message times. (default 1)
+    	Re-send message times (default 1)
   -req string
     	Json string param
+  -resEq string
+    	Check response msg equivalent to something
+  -resHas string
+    	Check response msg contain sub string
+  -timing string
+    	Start at particular time ex. 2019-05-08 15:04:00
   -to int
-    	Max waitting time. (default 10)
-  -w	Watch each resposnes.
+    	Max waitting time(second) (default 10)
+  -w	Watch each resposnes
 ```
 
 # Simple Start
