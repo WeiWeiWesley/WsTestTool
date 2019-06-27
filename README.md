@@ -6,7 +6,7 @@ WsTestTool
 ### Start with go: go run main.go -h
 ### Start with os version: ./exe/${OS_VERSION} -h
 
-```bash
+```
 # ./exe/mac_amd64 -h
 
   -H string
@@ -33,7 +33,7 @@ WsTestTool
 
 # Simple Start
 
-```bash=
+```bash
 # ./exe/mac_amd64 -H "ws://echo.websocket.org" -n 2 -r 5 -w
 
 {"command":"ping"}
@@ -64,7 +64,7 @@ WARN[0001] [Number of failed requests: 0]
 
 #### Success
 
-```bash=
+```bash
 # ./exe/mac_amd64 -H "ws://echo.websocket.org" -w -resHas 'ping'
 
 {"command":"ping"}
@@ -81,7 +81,7 @@ WARN[0000] [Number of failed requests: 0]
 ```
 
 #### Fail
-```bash=
+```bash
 # ./exe/mac_amd64 -H "ws://echo.websocket.org" -w -resHas 'wwww'
 
 String: "wwww" not in Response:"{"command":"ping"}"
@@ -101,7 +101,7 @@ WARN[0010] [Number of failed requests: 1]
 
 #### Success
 
-```bash=
+```bash
 # ./exe/mac_amd64 -H "ws://echo.websocket.org" -w -resEq '{"command":"ping"}'
 
 {"command":"ping"}
@@ -119,7 +119,7 @@ WARN[0000] [Number of failed requests: 0]
 
 #### Fail
 
-```bash=
+```bash
 # ./exe/mac_amd64 -H "ws://echo.websocket.org" -w -resEq 'ping'
 
 resEq: "ping" != Response: "{"command":"ping"}"
