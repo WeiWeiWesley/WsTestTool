@@ -26,20 +26,24 @@ var (
 	repeat         int
 	repeatDuration time.Duration
 	timing         string
+	resEquivalent  string
+	resHas         string
 )
 
 func init() {
 	//Require
 	flag.StringVar(&host, "H", "", "Host.")
 	//Options
-	flag.BoolVar(&help, "h", false, "Usage.")
-	flag.BoolVar(&watch, "w", false, "Watch each resposnes.")
-	flag.IntVar(&threads, "n", 1, "Number of connections.")
-	flag.IntVar(&d, "d", 10, "Time duration(nanosecond) between each request.")
-	flag.IntVar(&to, "to", 10, "Max waitting time(second).")
-	flag.IntVar(&repeat, "r", 1, "Re-send message times.")
+	flag.BoolVar(&help, "h", false, "Usage")
+	flag.BoolVar(&watch, "w", false, "Watch each resposnes")
+	flag.IntVar(&threads, "n", 1, "Number of connections")
+	flag.IntVar(&d, "d", 10, "Time duration(nanosecond) between each request")
+	flag.IntVar(&to, "to", 10, "Max waitting time(second)")
+	flag.IntVar(&repeat, "r", 1, "Re-send message times")
 	flag.StringVar(&request, "req", "", "Json string param")
 	flag.StringVar(&timing, "timing", "", "Start at particular time ex. 2019-05-08 15:04:00")
+	flag.StringVar(&resEquivalent, "resEq", "", "Check response msg equivalent to something")
+	flag.StringVar(&resHas, "resHas", "", "Check response msg contain sub string")
 	flag.Parse()
 
 	delay = time.Duration(d)

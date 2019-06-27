@@ -2,11 +2,12 @@ package kernel
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
-	
-	"WsTestTool/ws"
+
 	"WsTestTool/log"
+	"WsTestTool/ws"
 )
 
 //統計&核心
@@ -93,9 +94,17 @@ func Run() {
 					return
 				}
 
-				successSignal <- true
+				resStr := string(res)
 				if watch {
-					fmt.Println(string(res))
+					fmt.Println(resStr)
+				}
+
+				if resEquivalent == "" && resHas == "" {
+					successSignal <- true
+				} else if resEquivalent != "" && resStr == resEquivalent {
+					successSignal <- true
+				} else if resHas != "" && strings.Contains(resStr, resHas) {
+					successSignal <- true
 				}
 			}
 		}(connPool[i])
