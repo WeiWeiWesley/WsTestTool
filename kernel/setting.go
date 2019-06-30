@@ -108,14 +108,7 @@ func CheckParam() (paramErr error) {
 	}
 
 	if request != "" {
-		res, err := json.Marshal(request)
-		if err != nil {
-			paramErr = errors.New("Please check request format")
-			log.Print("error", paramErr.Error())
-		} else {
-			reqSend = res
-		}
-
+		reqSend = []byte(request)
 	} else {
 		msg := make(map[string]interface{})
 		msg["command"] = "ping"
