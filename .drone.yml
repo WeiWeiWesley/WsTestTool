@@ -1,7 +1,14 @@
+workspace:
+  base: /go
+  path: src/WeiWeiWesley/WsTestTool
+
 kind: pipeline
 name: backend
-
+ 
 steps:
-- name: echo
+- name: go_test
+  image: golang:1.12-alpine
+  environment:
+    CGO_ENABLED: 0
   commands:
-    - ECHO 'Say my name' 
+    - go test 
