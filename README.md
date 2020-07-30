@@ -7,7 +7,7 @@ WsTestTool
 ### Start with os version: ./exe/${OS_VERSION} -h
 
 ```
-# ./exe/mac_amd64 -h
+# ./exe/mac_amd64 -h 
 
   -H string
     	Host.
