@@ -4,4 +4,4 @@ name: backend
 steps:
 - name: echo
   commands:
-    - ECHO 'Say my name'
+    - ECHO 'Say my name' 
