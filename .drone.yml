@@ -1,0 +1,7 @@
+kind: pipeline
+name: backend
+
+steps:
+- name: echo
+  commands:
+    - ECHO 'Say my name'
