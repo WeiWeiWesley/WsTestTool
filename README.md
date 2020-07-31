@@ -1,14 +1,14 @@
 WsTestTool
 ===
- 
-# Usage        
- 
+
+# Usage
+
 ### Start with go: go run main.go -h
 ### Start with os version: ./exe/${OS_VERSION} -h
- 
-``` 
-# ./exe/mac_amd64 -h 
- 
+
+```
+# ./exe/mac_amd64 -h
+
   -H string
     	Host.
   -d int
@@ -134,4 +134,4 @@ INFO[0010] [Average response time: 10.004899823s]
 WARN[0010] [Number of failed requests: 1]
 =======================================================================
 ```
- 
+
