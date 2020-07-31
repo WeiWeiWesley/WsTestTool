@@ -1,7 +1,7 @@
 package main
 
 import (
-	"WsTestTool/kernel"
+	"github.com/WeiWeiWesley/WsTestTool/kernel"
 )
 
 func main() {

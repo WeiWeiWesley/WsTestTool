@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"WsTestTool/log"
+	"github.com/WeiWeiWesley/WsTestTool/log"
 	"encoding/json"
 )
 

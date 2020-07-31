@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"WsTestTool/log"
-	"WsTestTool/ws"
+	"github.com/WeiWeiWesley/WsTestTool/log"
+	"github.com/WeiWeiWesley/WsTestTool/ws"
 )
 
 //統計&核心

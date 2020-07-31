@@ -3,12 +3,12 @@ workspace:
   path: src/WeiWeiWesley/WsTestTool
 
 kind: pipeline
-name: backend
- 
+name: package testing
+
 steps:
 - name: go_test
   image: golang:1.12-alpine
   environment:
     CGO_ENABLED: 0
   commands:
-    - go test 
+    - go test
